@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Дуэль чисел</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;800&family=Onest:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1b2d;--bg2:#17294a;--sand:#f2e8d5;--you:#ffb347;--bot:#5ce1c8;--bad:#ff6b81;--mute:#8d9bb5;
+ --card:rgba(255,255,255,.06);--line:rgba(242,232,213,.14);box-sizing:border-box;color-scheme:dark;
+ padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{background:radial-gradient(1200px 700px at 15% -10%,var(--bg2),transparent 60%),radial-gradient(900px 600px at 100% 110%,#1d3a46,transparent 55%),var(--bg);
+ color:var(--sand);font-family:Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh}
+h1,h2,.big{font-family:Unbounded,"Arial Black",Impact,sans-serif;margin:0}
+main{width:100%;max-width:640px;padding:28px 18px 40px}
+.screen{display:none}.screen.on{display:block;animation:in .35s ease both}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+/* menu */
+.hero{text-align:center;padding-top:6vh}
+.hero h1{font-size:clamp(38px,11vw,70px);font-weight:800;line-height:1.02;letter-spacing:-.02em}
+.hero h1 span{display:block;font-weight:500;font-size:.42em;color:var(--mute);margin:.5em 0}
+.duel{display:flex;justify-content:center;align-items:center;gap:18px;margin:34px 0 10px}
+.badge{width:92px;height:92px;border-radius:50%;display:grid;place-items:center;font-family:Unbounded,sans-serif;font-weight:800;font-size:34px;color:#0f1b2d}
+.badge.y{background:var(--you);animation:float 3s ease-in-out infinite}
+.badge.b{background:var(--bot);animation:float 3s ease-in-out -1.5s infinite}
+.vs{color:var(--mute);font-size:14px}
+@keyframes float{50%{transform:translateY(-8px)}}
+.rules{max-width:420px;margin:22px auto 30px;color:var(--mute);line-height:1.55}
+button{font:inherit;cursor:pointer;border:0}
+.btn{background:var(--sand);color:#0f1b2d;font-family:Unbounded,sans-serif;font-weight:800;font-size:17px;padding:16px 38px;border-radius:999px;transition:transform .15s,box-shadow .15s;box-shadow:0 8px 0 #b9ac8f}
+.btn:hover{transform:translateY(-2px)}
+.btn:active{transform:translateY(5px);box-shadow:0 3px 0 #b9ac8f}
+:focus-visible{outline:3px solid var(--bot);outline-offset:3px}
+/* panels */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px;backdrop-filter:blur(8px)}
+.panel h2{font-size:22px;margin-bottom:8px}
+.sub{color:var(--mute);margin:0 0 18px;line-height:1.5}
+.row{display:flex;gap:10px}
+input[type=number]{flex:1;min-width:0;background:rgba(0,0,0,.28);border:2px solid var(--line);border-radius:14px;color:var(--sand);font-family:Unbounded,sans-serif;font-size:26px;padding:12px 16px;text-align:center;-moz-appearance:textfield}
+input::-webkit-outer-spin-button,input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+input:focus{outline:none;border-color:var(--you)}
+.go{background:var(--you);color:#0f1b2d;font-weight:600;font-size:16px;padding:0 24px;border-radius:14px}
+.go:disabled{opacity:.4;cursor:default}
+.err{color:var(--bad);min-height:22px;margin:10px 0 0;font-size:14px}
+/* game */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.turn{font-family:Unbounded,sans-serif;font-size:14px;padding:8px 16px;border-radius:999px;transition:background .3s,color .3s}
+.turn.y{background:var(--you);color:#0f1b2d}.turn.b{background:var(--bot);color:#0f1b2d}
+.cnt{color:var(--mute);font-size:14px}
+.track{margin:16px 0 4px}
+.track label{display:flex;justify-content:space-between;font-size:13px;color:var(--mute);margin-bottom:6px}
+.bar{position:relative;height:16px;border-radius:9px;background:rgba(0,0,0,.3);overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:9px;transition:left .5s cubic-bezier(.2,.8,.2,1),width .5s cubic-bezier(.2,.8,.2,1)}
+.bar.y i{background:var(--you)}.bar.b i{background:var(--bot)}
+.ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:3px}
+.say{margin-top:20px;padding:16px 18px;border-radius:16px;background:rgba(0,0,0,.25);border-left:5px solid var(--bot);min-height:62px;line-height:1.45}
+.say.y{border-left-color:var(--you)}
+.dots span{display:inline-block;width:8px;height:8px;margin:0 3px;border-radius:50%;background:var(--bot);animation:bl 1s infinite}
+.dots span:nth-child(2){animation-delay:.15s}.dots span:nth-child(3){animation-delay:.3s}
+@keyframes bl{50%{transform:translateY(-6px);opacity:.4}}
+.log{list-style:none;margin:18px 0 0;padding:0;max-height:210px;overflow:auto;display:flex;flex-direction:column;gap:7px}
+.log li{display:flex;gap:10px;align-items:center;font-size:14px;color:#d9d0bd}
+.log b{font-family:Unbounded,sans-serif;font-size:12px;border-radius:8px;padding:4px 9px;color:#0f1b2d;min-width:62px;text-align:center}
+.log .y b{background:var(--you)}.log .b b{background:var(--bot)}
+.hide{display:none!important}
+/* end */
+.end{text-align:center}
+.end .big{font-size:clamp(34px,9vw,56px);line-height:1.05;margin:10px 0 14px}
+.end p{color:var(--mute);margin:0 0 26px;line-height:1.5}
+#fx{position:fixed;inset:0;pointer-events:none;z-index:5}
+.shake{animation:sh .35s}@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+button,.pad button{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+body{min-height:100dvh}
+.pad{display:none;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.touch .pad{display:grid}
+.pad button{height:54px;border-radius:14px;background:rgba(255,255,255,.09);color:var(--sand);font-family:Unbounded,sans-serif;font-size:21px;font-weight:500;transition:background .1s,transform .1s}
+.pad button:active{background:rgba(255,255,255,.22);transform:scale(.95)}
+.pad .ok{background:var(--you);color:#0f1b2d}
+.pad .ok:active{background:#ffc877}
+.touch #guessRow .go,.touch #s-secret .row .go{display:none}
+.touch input[type=number]{caret-color:transparent}
+.go{min-height:52px}
+@media (max-width:480px){
+ main{padding:14px 12px 20px}
+ .panel{padding:16px;border-radius:18px}
+ .panel h2{font-size:19px}
+ .badge{width:76px;height:76px;font-size:28px}
+ .duel{margin:22px 0 6px}
+ .rules{margin:14px auto 22px;font-size:15px}
+ .track{margin:10px 0 2px}
+ .say{margin-top:14px;padding:12px 14px;min-height:52px;font-size:15px}
+ .log{max-height:72px;margin-top:12px}
+ input[type=number]{font-size:24px;padding:10px 12px}
+ .err{min-height:18px;margin-top:6px}
+ .btn{width:100%}
+}
+@media (max-height:700px){.pad button{height:46px;font-size:19px}.pad{margin-top:8px}.log{display:none}}
+
+.menu{display:flex;flex-direction:column;gap:18px;align-items:center}
+.menu .btn{width:100%;max-width:340px}
+.btn.alt{background:transparent;color:var(--sand);border:2px solid var(--sand);box-shadow:0 8px 0 rgba(242,232,213,.25)}
+.btn.alt:active{box-shadow:0 3px 0 rgba(242,232,213,.25)}
+.mini{background:transparent;color:var(--mute);font-size:13px;padding:6px 10px;border-radius:10px;border:1px solid var(--line);margin-left:6px}
+.mini:hover{color:var(--sand)}
+
+input[type=text]{flex:1;min-width:0;background:rgba(0,0,0,.28);border:2px solid var(--line);border-radius:14px;color:var(--sand);font-family:Unbounded,sans-serif;font-size:20px;padding:12px 16px;text-align:center}
+input[type=text]:focus{outline:none;border-color:var(--you)}
+.who{color:var(--mute);font-size:14px;margin:20px 0 0}
+.banner{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 10px);width:calc(100% - 24px);max-width:600px;z-index:20;background:var(--sand);color:#0f1b2d;border-radius:18px;padding:12px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(0,0,0,.45);font-weight:600;animation:in .3s ease both}
+.banner .mini{color:#0f1b2d;border-color:rgba(0,0,0,.3)}
+.banner .go{min-height:44px;padding:0 16px;background:#0f1b2d;color:var(--sand)}
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="banner hide" id="banner" role="alert"><span id="banTxt"></span><span style="display:flex;gap:6px"><button class="go" id="banYes">Принять</button><button class="mini" id="banNo">Нет</button></span></div>
+<main>
+ <section class="screen on" id="s-menu">
+  <div class="hero">
+   <h1><span>Дуэль чисел</span>Угадай число соперника</h1>
+   <div class="duel"><div class="badge y">?</div><div class="vs">vs</div><div class="badge b">?</div></div>
+   <p class="rules">Каждый загадывает число от 1 до 100. Вы по очереди угадываете числа друг друга. Побеждает тот, кто угадает первым.</p>
+   <div class="menu">
+    <button class="btn" id="playBot">Играть с ботом</button>
+    <button class="btn alt" id="playFriend">Играть с другом</button>
+    <button class="btn alt" id="playNet">Играть с другом 2</button>
+   </div>
+   <p class="who" id="who"></p>
+  </div>
+ </section>
+
+ <section class="screen" id="s-secret">
+  <div class="panel">
+   <h2 id="secTitle">Загадай число</h2>
+   <p class="sub" id="secSub"></p>
+   <div class="row"><input type="number" id="secret" min="1" max="100" inputmode="numeric" placeholder="?" aria-label="Загаданное число" autocomplete="off"><button class="go" id="ready">Готово</button></div>
+   <p class="err" id="e1" role="alert"></p>
+   <div class="pad" id="pad1"></div>
+  </div>
+ </section>
+
+ <section class="screen" id="s-pass">
+  <div class="panel end">
+   <div class="big" id="passTitle" style="font-size:clamp(26px,7vw,40px)"></div>
+   <p id="passText" style="margin-top:14px"></p>
+   <button class="btn" id="passBtn"></button>
+  </div>
+ </section>
+
+ <section class="screen" id="s-game">
+  <div class="panel">
+   <div class="top"><div class="turn y" id="turn">Твой ход</div><div><span class="cnt" id="cnt">Ход 1</span> <button class="mini" id="quit">В меню</button></div></div>
+   <div class="track"><label><span id="l1">Число робота</span><span id="r1"></span></label><div class="bar y"><i id="b1"></i></div><div class="ticks"><span>1</span><span>50</span><span>100</span></div></div>
+   <div class="track"><label><span id="l2">Твоё число глазами робота</span><span id="r2"></span></label><div class="bar b"><i id="b2"></i></div><div class="ticks"><span>1</span><span>50</span><span>100</span></div></div>
+   <div class="say y" id="say"></div>
+   <div class="row" style="margin-top:18px" id="guessRow"><input type="number" id="guess" min="1" max="100" inputmode="numeric" placeholder="1–100" aria-label="Твоя догадка"><button class="go" id="guessBtn">Угадать</button></div>
+   <button class="btn hide" id="nextBtn" style="margin-top:18px;width:100%">Передать телефон</button>
+   <p class="err" id="e2" role="alert"></p>
+   <div class="pad" id="pad2"></div>
+   <ul class="log" id="log"></ul>
+  </div>
+ </section>
+
+ <section class="screen" id="s-name">
+  <div class="panel">
+   <h2>Как тебя зовут?</h2>
+   <p class="sub">Друзья смогут позвать тебя играть по этому имени. Оно навсегда закрепится за тобой.</p>
+   <div class="row"><input type="text" id="nameIn" maxlength="16" placeholder="Имя" aria-label="Твоё имя" autocomplete="off"><button class="go" id="nameGo">Готово</button></div>
+   <p class="err" id="e3" role="alert"></p>
+   <button class="mini" id="offline">Играть без онлайна</button>
+  </div>
+ </section>
+
+ <section class="screen" id="s-lobby">
+  <div class="panel">
+   <h2>Играть с другом 2</h2>
+   <div id="lobbyForm">
+    <p class="sub">Игра на разных телефонах. Введи имя друга, и он получит приглашение.</p>
+    <div class="row"><input type="text" id="friendIn" maxlength="16" placeholder="Имя друга" aria-label="Имя друга" autocomplete="off"><button class="go" id="inviteGo">Позвать</button></div>
+    <p class="err" id="e4" role="alert"></p>
+   </div>
+   <div id="lobbyWait" class="hide"><div class="say"><span id="lobbyWho"></span><span class="dots"><span></span><span></span><span></span></span></div><button class="mini" id="cancelInv" style="margin:14px 0 0">Отменить</button></div>
+   <button class="mini" id="lobbyBack" style="margin:14px 0 0">В меню</button>
+  </div>
+ </section>
+
+ <section class="screen" id="s-end">
+  <div class="panel end">
+   <div class="big" id="endTitle"></div>
+   <p id="endText"></p>
+   <button class="btn" id="toMenu">В меню</button>
+  </div>
+ </section>
+</main>
+<script>
+(function(){
+var $=function(id){return document.getElementById(id)};
+var TOUCH=matchMedia('(pointer:coarse)').matches;
+var S={},gid=0,passCb=null;
+function show(id){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('on')});$(id).classList.add('on');window.scrollTo(0,0)}
+function later(fn,ms){var id=gid;setTimeout(function(){if(id===gid)fn()},ms)}
+function setBar(bar,r,txt){$(bar).style.left=((r.lo-1))+'%';$(bar).style.width=((r.hi-r.lo+1))+'%';$(txt).textContent=r.lo>=r.hi?('= '+r.lo):(r.lo+' … '+r.hi)}
+function say(html,cls){var e=$('say');e.className='say '+(cls||'');e.innerHTML=html}
+function addLog(who,num,hint){var li=document.createElement('li');li.className=who===0?'y':'b';
+ li.innerHTML='<b>'+S.names[who]+'</b><span>'+num+' — '+hint+'</span>';$('log').prepend(li)}
+function parse(v){var n=Number(v);return(v!==''&&Number.isInteger(n)&&n>=1&&n<=100)?n:null}
+function focusLater(id){if(!TOUCH)setTimeout(function(){$(id).focus()},50)}
+
+function start(mode){
+ gid++;
+ S={mode:mode,names:mode==='bot'?['Ты','Робот']:['Игрок 1','Игрок 2'],sec:[0,0],rng:[{lo:1,hi:100},{lo:1,hi:100}],cur:0,n:1,busy:false,setup:0};
+ if(mode==='bot')S.sec[1]=1+Math.floor(Math.random()*100);
+ $('log').innerHTML='';
+ askSecret(0)}
+function askSecret(i){
+ var pvp=S.mode==='pvp';S.setup=i;
+ $('secret').type=pvp?'password':'number';
+ $('secTitle').textContent=pvp?S.names[i]+', загадай число':'Загадай число';
+ $('secSub').textContent=pvp?'От 1 до 100. Число будет скрыто, соперник его не увидит. Запомни его.':'От 1 до 100. Запомни его: робот попытается его найти. Он честно не подсматривает.';
+ $('secret').value='';$('e1').textContent='';show('s-secret');focusLater('secret')}
+function ready(){
+ var n=parse($('secret').value);
+ if(n===null){$('e1').textContent='Введи целое число от 1 до 100.';var r=$('secret').parentNode;r.classList.add('shake');setTimeout(function(){r.classList.remove('shake')},400);return}
+ if(S.mode==='net')return netSecret(n);
+ S.sec[S.setup]=n;$('secret').value='';
+ if(S.mode==='pvp'){
+  if(S.setup===0)pass(1,function(){askSecret(1)},'Теперь твоя очередь загадать число. Игрок 1 не должен смотреть.');
+  else pass(0,function(){playerTurn(true)},'Оба числа загаданы. Ты ходишь первым!');
+ }else{playerTurn(true)}}
+function pass(i,cb,msg){
+ passCb=cb;$('passBtn').classList.remove('hide');
+ $('passTitle').textContent='Передай телефон: '+S.names[i];
+ $('passTitle').style.color=i===0?'var(--you)':'var(--bot)';
+ $('passText').textContent=msg;$('passBtn').textContent='Я '+S.names[i];show('s-pass')}
+function refresh(){
+ setBar('b1',S.rng[1],'r1');setBar('b2',S.rng[0],'r2');
+ $('l1').textContent=S.mode==='bot'?'Число робота':'Число: '+S.names[1];
+ $('l2').textContent=S.mode==='bot'?'Твоё число глазами робота':'Число: '+S.names[0];
+ $('cnt').textContent='Ход '+S.n}
+function playerTurn(first){
+ var c=S.cur,t=$('turn'),bot=S.mode==='bot';
+ S.busy=false;show('s-game');
+ t.className='turn '+(c===0?'y':'b');t.textContent=bot?'Твой ход':'Ход: '+S.names[c];
+ refresh();
+ $('guessRow').classList.remove('hide');$('pad2').classList.remove('hide');$('nextBtn').classList.add('hide');
+ $('guess').value='';$('e2').textContent='';
+ if(bot)say(first?'Робот загадал число. Попробуй его угадать!':'Твоя очередь. Какое число у робота?','y');
+ else say(S.names[c]+', угадай число: <b>'+S.names[1-c]+'</b>.',c===0?'y':'');
+ focusLater('guess')}
+function guess(){
+ if(S.busy)return;var n=parse($('guess').value);
+ if(n===null){$('e2').textContent='Введи целое число от 1 до 100.';return}
+ if(S.mode==='net')return netGuess(n);
+ var c=S.cur,t=1-c,bot=S.mode==='bot';
+ S.busy=true;$('e2').textContent='';$('guessRow').classList.add('hide');$('pad2').classList.add('hide');
+ if(n===S.sec[t]){addLog(c,n,'угадал!');return end(c)}
+ var more=S.sec[t]>n,r=S.rng[t];
+ if(more)r.lo=Math.max(r.lo,n+1);else r.hi=Math.min(r.hi,n-1);
+ addLog(c,n,more?'число больше':'число меньше');refresh();
+ say('Число <b>'+n+'</b>? Нет. '+(bot?'Моё число':'Число соперника')+' <b>'+(more?'БОЛЬШЕ':'МЕНЬШЕ')+'</b>.',c===0?'y':'');
+ if(bot){S.cur=1;later(botTurn,1400)}
+ else{$('nextBtn').classList.remove('hide')}}
+function nextPlayer(){
+ S.cur=1-S.cur;if(S.cur===0)S.n++;
+ pass(S.cur,function(){playerTurn(false)},S.names[S.cur]+', теперь ты угадываешь число соперника.')}
+function botTurn(){
+ var t=$('turn');t.className='turn b';t.textContent='Ход робота';
+ say('Думаю<span class="dots"><span></span><span></span><span></span></span>','');
+ later(function(){
+  var g=Math.floor((S.rng[0].lo+S.rng[0].hi)/2);
+  say('Твоё число <b>'+g+'</b>?','');
+  later(function(){
+   if(g===S.sec[0]){say('Да! Робот угадал.','');addLog(1,g,'угадал!');return end(1)}
+   var more=S.sec[0]>g,r=S.rng[0];
+   if(more)r.lo=g+1;else r.hi=g-1;
+   addLog(1,g,more?'твоё число больше':'твоё число меньше');
+   say('Число <b>'+g+'</b>? Нет, моё число <b>'+(more?'БОЛЬШЕ':'МЕНЬШЕ')+'</b>.','');
+   S.cur=0;S.n++;refresh();later(function(){playerTurn(false)},1500)
+  },1300)
+ },1200)}
+function end(w){
+ var bot=S.mode==='bot',turns=S.n;
+ later(function(){
+  $('endTitle').textContent=bot?(w===0?'Ты победил!':'Робот победил'):S.names[w]+' победил!';
+  $('endTitle').style.color=w===0?'var(--you)':'var(--bot)';
+  $('endText').textContent=bot?
+   (w===0?'Ты угадал число робота: '+S.sec[1]+'. Ходов: '+turns+'.':'Робот нашёл твоё число '+S.sec[0]+'. Число робота было '+S.sec[1]+'. Ходов: '+turns+'.'):
+   ('Число Игрока 1: '+S.sec[0]+'. Число Игрока 2: '+S.sec[1]+'. Ходов: '+turns+'.');
+  show('s-end');if(!(bot&&w===1))confetti()},900)}
+
+$('playBot').onclick=function(){start('bot')};
+$('playFriend').onclick=function(){start('pvp')};
+function toMenu(){if(S.mode==='net')netLeave();gid++;S={};show('s-menu')}
+$('toMenu').onclick=toMenu;$('quit').onclick=toMenu;
+$('ready').onclick=ready;$('secret').onkeydown=function(e){if(e.key==='Enter')ready()};
+$('guessBtn').onclick=guess;$('guess').onkeydown=function(e){if(e.key==='Enter')guess()};
+$('nextBtn').onclick=nextPlayer;
+$('passBtn').onclick=function(){var f=passCb;passCb=null;if(f)f()};
+
+// ---- online (needs the Flask server) ----
+var ME=null,POLL=null,NG=null,INV=null,lastKey='',lastMoves=-1,LEFT='';
+function lsGet(){try{return JSON.parse(localStorage.getItem('duel_me'))}catch(e){return null}}
+function lsSet(v){try{localStorage.setItem('duel_me',JSON.stringify(v))}catch(e){}}
+function rand(){var a=new Uint8Array(16);crypto.getRandomValues(a);return Array.prototype.map.call(a,function(b){return('0'+b.toString(16)).slice(-2)}).join('')}
+function api(path,body){
+ var bad=function(){throw new Error('Нет связи с сервером')};
+ return fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(Object.assign({token:ME&&ME.token},body||{}))}).catch(bad)
+ .then(function(r){return r.json().catch(bad).then(function(j){if(!r.ok){var e=new Error(j.error||'Ошибка');e.status=r.status;throw e}return j})})}
+function login(name,token){
+ ME={name:name,token:token};
+ return api('/api/register',{name:name}).then(function(j){ME={name:j.name,token:j.token,ok:true};lsSet({name:j.name,token:j.token});$('who').textContent='Ты: '+j.name;poll();return j})
+ .catch(function(e){ME=null;throw e})}
+function ensureOnline(){if(ME&&ME.ok)return Promise.resolve();var c=lsGet();if(!c||!c.name)return Promise.reject(new Error('Сначала введи имя'));return login(c.name,c.token)}
+function init(){
+ var c=lsGet();if(!c||!c.name){show('s-name');return}
+ login(c.name,c.token).catch(function(e){
+  if(e.status===409||e.status===400){lsSet(null);show('s-name');$('e3').textContent='Имя «'+c.name+'» уже занято. Выбери другое.'}
+  else $('who').textContent='Ты: '+c.name+' (нет связи с сервером)'})}
+function poll(){clearTimeout(POLL);if(!ME||!ME.ok)return;
+ fetch('/api/state?token='+encodeURIComponent(ME.token)).then(function(r){return r.json()}).then(handleState).catch(function(){})
+ .then(function(){POLL=setTimeout(poll,document.hidden?6000:(NG&&NG.status==='play'?1000:2000))})}
+function handleState(j){
+ if(!j||j.error)return;
+ var iv=j.invites&&j.invites[0];
+ if(iv&&(!INV||INV.gid!==iv.gid)&&navigator.vibrate)navigator.vibrate([120,60,120]);
+ INV=iv||null;
+ if(INV){$('banTxt').textContent=INV.from+' зовёт тебя играть';$('banner').classList.remove('hide')}else $('banner').classList.add('hide');
+ if(j.game&&j.game.gid!==LEFT){NG=j.game;netRender(NG)}
+ else if(!j.game&&NG){NG=null;lastKey='';if(S.mode==='net')netEnd('Игра прервана','Связь с игрой потеряна.',false)}}
+function netRender(g){
+ var me=g.me,opp=1-me,key=g.gid+g.status+(g.ready[me]?1:0);
+ if(key!==lastKey){lastKey=key;gid++;
+  if(S.mode!=='net'||S.gidn!==g.gid){S={mode:'net',gidn:g.gid,names:['Ты',g.names[opp]],busy:false};$('log').innerHTML='';lastMoves=-1}
+  netScreen(g)}
+ if(g.status==='play'||g.status==='done')netPlay(g)}
+function netScreen(g){
+ var me=g.me,opp=1-me,nm=g.names,st=g.status;
+ if(st==='invited'){show('s-lobby');lobbyMode(true,nm[opp])}
+ else if(st==='secrets'){
+  if(g.ready[me])netWait('Ждём игрока '+nm[opp],'Он ещё загадывает число…');
+  else{$('secTitle').textContent='Загадай число';$('secSub').textContent='От 1 до 100. Соперник: '+nm[opp]+'. Число скрыто, он его не увидит.';$('secret').type='password';$('secret').value='';$('e1').textContent='';show('s-secret');focusLater('secret')}}
+ else if(st==='play')show('s-game');
+ else if(st==='done'){var win=g.winner===me;show('s-game');
+  later(function(){netEnd(win?'Ты победил!':nm[g.winner]+' победил!','Число '+nm[0]+': '+g.sec[0]+'. Число '+nm[1]+': '+g.sec[1]+'. Ходов: '+g.moves.length+'.',win)},1100)}
+ else netEnd({declined:nm[opp]+' отказался играть',expired:'Приглашение истекло',abandoned:nm[opp]+' вышел из игры',cancelled:'Приглашение отменено'}[st]||'Игра закончена','',false)}
+function netWait(t,txt){$('passTitle').textContent=t;$('passTitle').style.color='var(--bot)';$('passText').textContent=txt;$('passBtn').classList.add('hide');show('s-pass')}
+function netEnd(title,text,win){$('endTitle').textContent=title;$('endTitle').style.color=win?'var(--you)':'var(--bot)';$('endText').textContent=text;show('s-end');if(win)confetti()}
+function lobbyMode(wait,name){$('lobbyForm').classList.toggle('hide',wait);$('lobbyWait').classList.toggle('hide',!wait);if(wait)$('lobbyWho').textContent='Ждём ответа от '+name;}
+function netPlay(g){
+ var me=g.me,opp=1-me,nm=g.names,mine=g.status==='play'&&g.turn===me,L=g.moves[g.moves.length-1],hint='';
+ setBar('b1',{lo:g.rng[opp][0],hi:g.rng[opp][1]},'r1');setBar('b2',{lo:g.rng[me][0],hi:g.rng[me][1]},'r2');
+ $('l1').textContent='Число: '+nm[opp];$('l2').textContent='Твоё число глазами '+nm[opp];
+ var t=$('turn');t.className='turn '+(mine?'y':'b');t.textContent=mine?'Твой ход':'Ход: '+nm[opp];
+ $('cnt').textContent='Ход '+(g.moves.length+(g.status==='done'?0:1));
+ if(L&&L.res!==0)hint=(L.by===me?'Ты назвал ':nm[L.by]+' назвал ')+'<b>'+L.n+'</b>: '+(L.by===me?'число соперника':'твоё число')+' <b>'+(L.res>0?'БОЛЬШЕ':'МЕНЬШЕ')+'</b>. ';
+ if(g.status==='done')say(L.by===me?'Ты угадал!':nm[opp]+' угадал твоё число.','');
+ else if(mine)say(hint+'Твой ход. Угадай число: <b>'+nm[opp]+'</b>.','y');
+ else say(hint+'Ждём, пока <b>'+nm[opp]+'</b> угадывает<span class="dots"><span></span><span></span><span></span></span>','');
+ $('guessRow').classList.toggle('hide',!mine);$('pad2').classList.toggle('hide',!mine);$('nextBtn').classList.add('hide');
+ if(g.moves.length!==lastMoves){lastMoves=g.moves.length;$('guess').value='';$('e2').textContent='';S.busy=false;if(mine)focusLater('guess')}
+ var ul=$('log');ul.innerHTML='';
+ g.moves.forEach(function(m){var li=document.createElement('li'),b=document.createElement('b'),sp=document.createElement('span');
+  li.className=m.by===me?'y':'b';b.textContent=m.by===me?'Ты':nm[m.by];
+  sp.textContent=m.n+' — '+(m.res===0?'угадал!':m.res>0?'число больше':'число меньше');li.appendChild(b);li.appendChild(sp);ul.prepend(li)})}
+function netGuess(n){
+ if(S.busy||!NG||NG.status!=='play'||NG.turn!==NG.me)return;S.busy=true;$('e2').textContent='';
+ api('/api/guess',{gid:NG.gid,n:n}).then(function(j){NG=j.game;netRender(NG)}).catch(function(e){S.busy=false;$('e2').textContent=e.message})}
+function netSecret(n){
+ if(!NG)return;api('/api/secret',{gid:NG.gid,n:n}).then(function(j){$('secret').value='';NG=j.game;netRender(NG)}).catch(function(e){$('e1').textContent=e.message})}
+function netLeave(){if(NG){LEFT=NG.gid;api('/api/leave',{gid:NG.gid}).catch(function(){})}NG=null;lastKey=''}
+function answer(ok){var iv=INV;INV=null;$('banner').classList.add('hide');if(!iv)return;
+ api('/api/respond',{gid:iv.gid,accept:ok}).then(function(j){if(ok&&j.game){LEFT='';gid++;NG=j.game;lastKey='';netRender(NG)}}).catch(function(){})}
+$('banYes').onclick=function(){answer(true)};$('banNo').onclick=function(){answer(false)};
+$('playNet').onclick=function(){
+ ensureOnline().then(function(){
+  if(NG&&NG.status!=='done'){lastKey='';netRender(NG)}
+  else{lobbyMode(false);$('friendIn').value='';$('e4').textContent='';show('s-lobby')}
+ }).catch(function(e){if(!lsGet()){show('s-name');$('e3').textContent='Сначала введи имя.'}else $('who').textContent=e.message})};
+$('inviteGo').onclick=function(){var nm=$('friendIn').value.trim();if(!nm){$('e4').textContent='Введи имя друга.';return}
+ $('e4').textContent='';api('/api/invite',{to:nm}).then(function(j){LEFT='';NG=j.game;lastKey='';netRender(NG)}).catch(function(e){$('e4').textContent=e.message})};
+$('friendIn').onkeydown=function(e){if(e.key==='Enter')$('inviteGo').onclick()};
+$('cancelInv').onclick=function(){netLeave();lobbyMode(false)};
+$('lobbyBack').onclick=toMenu;
+function nameGo(){var v=$('nameIn').value.trim();if(v.length<2){$('e3').textContent='Минимум 2 символа.';return}
+ $('e3').textContent='';login(v,rand()).then(function(){show('s-menu')}).catch(function(e){$('e3').textContent=e.message})}
+$('nameGo').onclick=nameGo;$('nameIn').onkeydown=function(e){if(e.key==='Enter')nameGo()};
+$('offline').onclick=function(){show('s-menu')};
+
+// on-screen number pad for phones
+function buildPad(id,input,submit){
+ var box=$(id),keys=['1','2','3','4','5','6','7','8','9','\u232B','0','OK'];
+ keys.forEach(function(k){var b=document.createElement('button');b.type='button';b.textContent=k;
+  if(k==='OK'){b.className='ok';b.setAttribute('aria-label','Подтвердить')}
+  if(k==='\u232B')b.setAttribute('aria-label','Стереть');
+  b.onclick=function(){
+   if(k==='OK')return submit();
+   var v=input.value;
+   if(k==='\u232B')v=v.slice(0,-1);else if(v.length<3)v+=k;
+   if(Number(v)>100)v=k;
+   input.value=v;
+   if(navigator.vibrate)navigator.vibrate(8)};
+  box.appendChild(b)})}
+if(TOUCH){document.documentElement.classList.add('touch');
+ [$('secret'),$('guess')].forEach(function(i){i.setAttribute('readonly','');i.setAttribute('inputmode','none')});
+ buildPad('pad1',$('secret'),ready);buildPad('pad2',$('guess'),guess)}
+
+// confetti
+function confetti(){
+ var c=$('fx'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;
+ var cols=['#ffb347','#5ce1c8','#f2e8d5','#ff6b81'],p=[];
+ for(var i=0;i<140;i++)p.push({x:Math.random()*c.width,y:-20-Math.random()*c.height*.5,vx:(Math.random()-.5)*3,vy:2+Math.random()*4,s:5+Math.random()*7,r:Math.random()*6,c:cols[i%4]});
+ var f=0;(function a(){x.clearRect(0,0,c.width,c.height);
+  p.forEach(function(q){q.x+=q.vx;q.y+=q.vy;q.r+=.1;x.save();x.translate(q.x,q.y);x.rotate(q.r);x.fillStyle=q.c;x.fillRect(-q.s/2,-q.s/4,q.s,q.s/2);x.restore()});
+  if(++f<260)requestAnimationFrame(a);else x.clearRect(0,0,c.width,c.height)})()}
+init();
+})();
+</script>
+</body>
+</html>
